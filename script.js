@@ -1,6 +1,7 @@
-const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.CONFIG;
+// Carrega credenciais públicas do config.js
+const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.CONFIG || {};
 
-// Tabelas de Regras
+// Regras e Prêmios
 const PREMIOS = [0, 1000, 5000, 10000, 25000, 50000, 100000, 200000, 500000, 1000000];
 const NOME_JOGO = "Show do Milhão - Python";
 
@@ -15,47 +16,27 @@ let timerInterval = null;
 let partidaId = null;
 let bloqueado = false;
 
-// Elementos de Navegação
-const btnAbaJogar = document.getElementById("aba-jogar-btn");
-const btnAbaRanking = document.getElementById("aba-ranking-btn");
-const secaoJogo = document.getElementById("secao-jogo");
-const secaoRanking = document.getElementById("secao-ranking");
+// Helpers de formatação
+function formatarDinheiro(valor) {
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
+    .format(valor)
+    .replace(/\u00a0/g, " ");
+}
 
-// Telas do Jogo
-const telaInicio = document.getElementById("tela-inicio");
-const telaPartida = document.getElementById("tela-partida");
-const telaFim = document.getElementById("tela-fim");
-const formInicio = document.getElementById("form-inicio");
-const inputApelido = document.getElementById("input-apelido");
+function formatarTempo(segundos) {
+  const total = Math.round(Number(segundos));
+  return `${Math.floor(total / 60)} min ${String(total % 60).padStart(2, "0")} s`;
+}
 
-// Elementos da Partida
-const txtProgresso = document.getElementById("txt-progresso");
-const txtDificuldade = document.getElementById("txt-dificuldade");
-const txtTempo = document.getElementById("txt-tempo");
-const txtValorAcertar = document.getElementById("txt-valor-acertar");
-const txtValorParar = document.getElementById("txt-valor-parar");
-const txtEnunciado = document.getElementById("txt-enunciado");
-const botoesAlt = document.querySelectorAll(".btn-alt");
-const btnParar = document.getElementById("btn-parar");
+function formatarData(iso) {
+  try {
+    return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  } catch (e) {
+    return iso;
+  }
+}
 
-// Fim de jogo
-const fimTitulo = document.getElementById("fim-titulo");
-const fimValor = document.getElementById("fim-valor");
-const fimDetalhes = document.getElementById("fim-detalhes");
-const fimStatusEnvio = document.getElementById("fim-status-envio");
-const btnJogarNovamente = document.getElementById("btn-jogar-novamente");
-const btnIrRanking = document.getElementById("btn-ir-ranking");
-
-// Ranking
-const selectJogo = document.getElementById("filtro-jogo");
-const btnAtualizar = document.getElementById("btn-atualizar");
-const rankingMensagem = document.getElementById("ranking-mensagem");
-const tabelaRanking = document.getElementById("tabela-ranking");
-const corpoRanking = document.getElementById("corpo-ranking");
-
-// ==========================================
-// FUNÇÕES AUXILIARES DA API SUPABASE
-// ==========================================
+// Comunicação com Supabase REST API
 async function api(caminho, opcoes = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${caminho}`;
   const cabecalhos = {
@@ -72,25 +53,15 @@ async function api(caminho, opcoes = {}) {
   return contentType && contentType.includes("application/json") ? resposta.json() : null;
 }
 
-function formatarDinheiro(valor) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" })
-    .format(valor)
-    .replace(/\u00a0/g, " ");
-}
+// Navegação entre Abas
+window.alternarAba = function(aba) {
+  const btnAbaJogar = document.getElementById("aba-jogar-btn");
+  const btnAbaRanking = document.getElementById("aba-ranking-btn");
+  const secaoJogo = document.getElementById("secao-jogo");
+  const secaoRanking = document.getElementById("secao-ranking");
 
-function formatarTempo(segundos) {
-  const total = Math.round(Number(segundos));
-  return `${Math.floor(total / 60)} min ${String(total % 60).padStart(2, "0")} s`;
-}
+  if (!btnAbaJogar || !btnAbaRanking || !secaoJogo || !secaoRanking) return;
 
-function formatarData(iso) {
-  return new Date(iso).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
-}
-
-// ==========================================
-// NAVEGAÇÃO ENTRE ABAS
-// ==========================================
-function alternarAba(aba) {
   if (aba === "jogar") {
     btnAbaJogar.classList.add("ativa");
     btnAbaRanking.classList.remove("ativa");
@@ -103,79 +74,78 @@ function alternarAba(aba) {
     secaoRanking.hidden = false;
     carregarRanking();
   }
-}
+};
 
-btnAbaJogar.addEventListener("click", () => alternarAba("jogar"));
-btnAbaRanking.addEventListener("click", () => alternarAba("ranking"));
-btnIrRanking.addEventListener("click", () => alternarAba("ranking"));
+// Iniciar Partida
+window.iniciarPartida = async function() {
+  const inputApelido = document.getElementById("input-apelido");
+  const btnIniciar = document.getElementById("btn-iniciar");
+  const apelido = inputApelido ? inputApelido.value.trim() : "";
 
-// ==========================================
-// LÓGICA DO JOGO NA WEB
-// ==========================================
-async function carregarJogoId() {
-  if (jogoId) return jogoId;
-  const jogos = await api(`jogos?select=id,nome&nome=eq.${encodeURIComponent(NOME_JOGO)}`);
-  if (jogos && jogos.length > 0) {
-    jogoId = jogos[0].id;
-    return jogoId;
+  if (!apelido) {
+    alert("Por favor, digite seu apelido antes de começar.");
+    if (inputApelido) inputApelido.focus();
+    return;
   }
-  throw new Error("Jogo não encontrado no banco.");
-}
-
-async function sortearPerguntasBanco() {
-  const todas = await api("perguntas?select=id,enunciado,alternativa_a,alternativa_b,alternativa_c,alternativa_d,dificuldade");
-  const embaralhar = (lista) => lista.sort(() => Math.random() - 0.5);
-
-  const faceis = embaralhar(todas.filter(p => p.dificuldade === "facil")).slice(0, 3);
-  const medias = embaralhar(todas.filter(p => p.dificuldade === "media")).slice(0, 3);
-  const dificeis = embaralhar(todas.filter(p => p.dificuldade === "dificil")).slice(0, 3);
-
-  return [...faceis, ...medias, ...dificeis];
-}
-
-async function iniciarPartida(e) {
-  e.preventDefault();
-  const apelido = inputApelido.value.trim();
-  if (!apelido) return;
 
   jogadorApelido = apelido;
-  partidaId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p_' + Date.now();
+  partidaId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'p_' + Date.now();
   acertos = 0;
   indicePerguntaAtual = 0;
   bloqueado = false;
 
-  const btnSubmit = formInicio.querySelector("button");
-  btnSubmit.disabled = true;
-  btnSubmit.textContent = "Preparando perguntas...";
+  if (btnIniciar) {
+    btnIniciar.disabled = true;
+    btnIniciar.textContent = "Preparando perguntas...";
+  }
 
   try {
-    await carregarJogoId();
-    perguntasPartida = await sortearPerguntasBanco();
-    if (perguntasPartida.length === 0) {
-      alert("Nenhuma pergunta encontrada no banco de dados.");
-      btnSubmit.disabled = false;
-      btnSubmit.textContent = "Iniciar Partida 🚀";
-      return;
+    // 1. Busca o ID do jogo no Supabase se ainda não tiver
+    if (!jogoId) {
+      const jogos = await api(`jogos?select=id,nome&nome=eq.${encodeURIComponent(NOME_JOGO)}`);
+      if (jogos && jogos.length > 0) {
+        jogoId = jogos[0].id;
+      } else {
+        throw new Error("Jogo não encontrado no banco de dados.");
+      }
     }
 
-    telaInicio.hidden = true;
-    telaFim.hidden = true;
-    telaPartida.hidden = false;
+    // 2. Busca e sorteia 3 fáceis, 3 médias e 3 difíceis
+    const todas = await api("perguntas?select=id,enunciado,alternativa_a,alternativa_b,alternativa_c,alternativa_d,dificuldade");
+    if (!todas || todas.length === 0) {
+      throw new Error("Nenhuma pergunta encontrada no banco de dados.");
+    }
+
+    const embaralhar = (lista) => lista.sort(() => Math.random() - 0.5);
+    const faceis = embaralhar(todas.filter(p => p.dificuldade === "facil")).slice(0, 3);
+    const medias = embaralhar(todas.filter(p => p.dificuldade === "media")).slice(0, 3);
+    const dificeis = embaralhar(todas.filter(p => p.dificuldade === "dificil")).slice(0, 3);
+
+    perguntasPartida = [...faceis, ...medias, ...dificeis];
+
+    // 3. Exibe tela de jogo
+    document.getElementById("tela-inicio").hidden = true;
+    document.getElementById("tela-fim").hidden = true;
+    document.getElementById("tela-partida").hidden = false;
 
     tempoInicio = performance.now();
     iniciarCronometro();
     exibirPerguntaAtual();
   } catch (erro) {
-    alert("Falha ao conectar com o banco de dados: " + erro.message);
+    alert("Falha ao iniciar o jogo: " + erro.message);
   } finally {
-    btnSubmit.disabled = false;
-    btnSubmit.textContent = "Iniciar Partida 🚀";
+    if (btnIniciar) {
+      btnIniciar.disabled = false;
+      btnIniciar.textContent = "Iniciar Partida 🚀";
+    }
   }
-}
+};
 
 function iniciarCronometro() {
   clearInterval(timerInterval);
+  const txtTempo = document.getElementById("txt-tempo");
   timerInterval = setInterval(() => {
+    if (!txtTempo) return;
     const segundos = Math.floor((performance.now() - tempoInicio) / 1000);
     const m = String(Math.floor(segundos / 60)).padStart(2, "0");
     const s = String(segundos % 60).padStart(2, "0");
@@ -188,15 +158,17 @@ function exibirPerguntaAtual() {
   const p = perguntasPartida[indicePerguntaAtual];
   const num = indicePerguntaAtual + 1;
 
-  txtProgresso.textContent = `${num}/${perguntasPartida.length}`;
+  document.getElementById("txt-progresso").textContent = `${num}/${perguntasPartida.length}`;
+  const txtDificuldade = document.getElementById("txt-dificuldade");
   txtDificuldade.textContent = p.dificuldade.toUpperCase();
   txtDificuldade.className = `status-valor badge-${p.dificuldade}`;
 
-  txtValorAcertar.textContent = formatarDinheiro(PREMIOS[num]);
-  txtValorParar.textContent = formatarDinheiro(PREMIOS[num - 1]);
-  txtEnunciado.textContent = p.enunciado;
+  document.getElementById("txt-valor-acertar").textContent = formatarDinheiro(PREMIOS[num]);
+  document.getElementById("txt-valor-parar").textContent = formatarDinheiro(PREMIOS[num - 1]);
+  document.getElementById("txt-enunciado").textContent = p.enunciado;
 
-  botoesAlt.forEach(btn => {
+  const botoes = document.querySelectorAll(".btn-alt");
+  botoes.forEach(btn => {
     const letra = btn.dataset.letra;
     btn.querySelector(".alt-texto").textContent = p[`alternativa_${letra}`];
     btn.className = "btn-alt";
@@ -204,7 +176,8 @@ function exibirPerguntaAtual() {
   });
 }
 
-async function responder(letra, btnClicado) {
+// Resposta das alternativas
+window.responderLetra = async function(letra, btnClicado) {
   if (bloqueado) return;
   bloqueado = true;
 
@@ -212,7 +185,7 @@ async function responder(letra, btnClicado) {
   btnClicado.style.transform = "scale(0.98)";
 
   try {
-    // Valida no banco com a RPC (gabarito nunca sai do banco)
+    // Valida no banco com a RPC (segurança: gabarito nunca sai do banco)
     const resposta = await api("rpc/verificar_resposta", {
       method: "POST",
       body: JSON.stringify({ p_id: p.id, p_resposta: letra }),
@@ -230,48 +203,44 @@ async function responder(letra, btnClicado) {
         } else {
           exibirPerguntaAtual();
         }
-      }, 900);
+      }, 800);
     } else {
       btnClicado.classList.add("errada");
       setTimeout(() => {
         finalizarPartida("erro");
-      }, 1000);
+      }, 900);
     }
   } catch (e) {
-    alert("Erro de conexão ao verificar a resposta. Tente clicar novamente.");
+    alert("Erro ao validar resposta com o servidor. Tente novamente.");
     bloqueado = false;
   }
-}
+};
 
-botoesAlt.forEach(btn => {
-  btn.addEventListener("click", () => responder(btn.dataset.letra, btn));
-});
-
-btnParar.addEventListener("click", () => {
+window.pararPartida = function() {
   if (bloqueado) return;
   if (confirm(`Deseja parar agora e garantir ${formatarDinheiro(PREMIOS[acertos])}?`)) {
     finalizarPartida("desistencia");
   }
-});
+};
 
 async function finalizarPartida(motivo) {
   clearInterval(timerInterval);
   const duracaoSegundos = Number(((performance.now() - tempoInicio) / 1000).toFixed(2));
   const premioFinal = PREMIOS[acertos];
 
-  telaPartida.hidden = true;
-  telaFim.hidden = false;
+  document.getElementById("tela-partida").hidden = true;
+  document.getElementById("tela-fim").hidden = false;
 
-  fimValor.textContent = formatarDinheiro(premioFinal);
+  document.getElementById("fim-valor").textContent = formatarDinheiro(premioFinal);
   const titulos = {
     vitoria: "🎉 PARABÉNS! VOCÊ É UM MILIONÁRIO!",
     desistencia: "🛑 Você optou por parar!",
     erro: "❌ Que pena, você errou!",
   };
-  fimTitulo.textContent = titulos[motivo];
-  fimDetalhes.textContent = `Jogador: ${jogadorApelido} • Acertos: ${acertos}/9 • Tempo: ${formatarTempo(duracaoSegundos)}`;
+  document.getElementById("fim-titulo").textContent = titulos[motivo];
+  document.getElementById("fim-detalhes").textContent = `Jogador: ${jogadorApelido} • Acertos: ${acertos}/9 • Tempo: ${formatarTempo(duracaoSegundos)}`;
 
-  // Salvar no Supabase
+  const fimStatusEnvio = document.getElementById("fim-status-envio");
   fimStatusEnvio.textContent = "Gravando resultado no ranking oficial...";
   fimStatusEnvio.className = "status-envio";
 
@@ -299,18 +268,22 @@ async function finalizarPartida(motivo) {
   }
 }
 
-btnJogarNovamente.addEventListener("click", () => {
-  telaFim.hidden = true;
-  telaInicio.hidden = false;
-  inputApelido.focus();
-});
-
-formInicio.addEventListener("submit", iniciarPartida);
+window.reiniciarJogo = function() {
+  document.getElementById("tela-fim").hidden = true;
+  document.getElementById("tela-inicio").hidden = false;
+  const input = document.getElementById("input-apelido");
+  if (input) {
+    input.value = "";
+    input.focus();
+  }
+};
 
 // ==========================================
 // CONSULTA DO RANKING AO VIVO
 // ==========================================
 async function carregarJogosSelect() {
+  const selectJogo = document.getElementById("filtro-jogo");
+  if (!selectJogo) return 0;
   const jogos = await api("jogos?select=id,nome&order=nome.asc");
   selectJogo.replaceChildren();
   for (const j of jogos) {
@@ -322,8 +295,15 @@ async function carregarJogosSelect() {
   return jogos.length;
 }
 
-async function carregarRanking() {
+window.carregarRanking = async function() {
+  const selectJogo = document.getElementById("filtro-jogo");
+  const rankingMensagem = document.getElementById("ranking-mensagem");
+  const tabelaRanking = document.getElementById("tabela-ranking");
+  const corpoRanking = document.getElementById("corpo-ranking");
+
+  if (!selectJogo || !rankingMensagem || !tabelaRanking || !corpoRanking) return;
   if (!selectJogo.value) return;
+
   rankingMensagem.textContent = "Carregando melhores pontuações...";
   rankingMensagem.hidden = false;
   tabelaRanking.hidden = true;
@@ -371,18 +351,24 @@ async function carregarRanking() {
     rankingMensagem.textContent = "Erro ao consultar o ranking online.";
     rankingMensagem.className = "ranking-mensagem erro";
   }
-}
+};
 
-selectJogo.addEventListener("change", carregarRanking);
-btnAtualizar.addEventListener("click", carregarRanking);
+// Shims de compatibilidade (para nunca quebrar em chamadas legadas)
+window.mostrarMensagem = function(t) {
+  const el = document.getElementById("ranking-mensagem");
+  if (el) el.textContent = t;
+};
+window.iniciar = function() {
+  if (window.carregarRanking) window.carregarRanking();
+};
 
-// Inicialização
-(async function init() {
+// Inicialização automática ao carregar a página
+document.addEventListener("DOMContentLoaded", async () => {
   try {
     if (await carregarJogosSelect()) {
-      await carregarRanking();
+      await window.carregarRanking();
     }
   } catch (e) {
-    rankingMensagem.textContent = "Não foi possível carregar o banco de dados.";
+    console.warn("Aviso na inicialização do ranking:", e);
   }
-})();
+});

@@ -4,15 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Show do Milhão - Python & Web</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3.0">
 </head>
 <body>
   <header>
     <div class="container header-content">
       <h1>💰 Show do Milhão</h1>
       <nav class="abas">
-        <button id="aba-jogar-btn" class="aba-btn ativa" type="button">🎮 Jogar no Navegador</button>
-        <button id="aba-ranking-btn" class="aba-btn" type="button">🏆 Ranking Oficial</button>
+        <button id="aba-jogar-btn" class="aba-btn ativa" type="button" onclick="alternarAba('jogar')">🎮 Jogar no Navegador</button>
+        <button id="aba-ranking-btn" class="aba-btn" type="button" onclick="alternarAba('ranking')">🏆 Ranking Oficial</button>
       </nav>
     </div>
   </header>
@@ -27,10 +27,10 @@
           Responda até 9 perguntas sem errar: 3 fáceis, 3 médias e 3 difíceis.<br>
           Os prêmios são fictícios e cada acerto substitui o valor anterior.
         </p>
-        <form id="form-inicio" class="form-inicio">
+        <form id="form-inicio" class="form-inicio" onsubmit="event.preventDefault(); iniciarPartida(); return false;">
           <label for="input-apelido">Digite seu Apelido (não vazio, até 20 letras):</label>
           <input type="text" id="input-apelido" maxlength="20" placeholder="Ex: DevPython" required autofocus autocomplete="off">
-          <button type="submit" class="btn-principal">Iniciar Partida 🚀</button>
+          <button type="button" id="btn-iniciar" class="btn-principal" onclick="iniciarPartida()">Iniciar Partida 🚀</button>
         </form>
       </div>
 
@@ -60,14 +60,14 @@
         </div>
 
         <div id="grid-alternativas" class="grid-alternativas">
-          <button class="btn-alt" data-letra="a"><span class="letra">A</span> <span class="alt-texto">...</span></button>
-          <button class="btn-alt" data-letra="b"><span class="letra">B</span> <span class="alt-texto">...</span></button>
-          <button class="btn-alt" data-letra="c"><span class="letra">C</span> <span class="alt-texto">...</span></button>
-          <button class="btn-alt" data-letra="d"><span class="letra">D</span> <span class="alt-texto">...</span></button>
+          <button class="btn-alt" data-letra="a" onclick="responderLetra('a', this)"><span class="letra">A</span> <span class="alt-texto">...</span></button>
+          <button class="btn-alt" data-letra="b" onclick="responderLetra('b', this)"><span class="letra">B</span> <span class="alt-texto">...</span></button>
+          <button class="btn-alt" data-letra="c" onclick="responderLetra('c', this)"><span class="letra">C</span> <span class="alt-texto">...</span></button>
+          <button class="btn-alt" data-letra="d" onclick="responderLetra('d', this)"><span class="letra">D</span> <span class="alt-texto">...</span></button>
         </div>
 
         <div class="barra-acoes">
-          <button id="btn-parar" type="button" class="btn-perigo">Parar e levar <span id="txt-valor-parar">R$ 0,00</span></button>
+          <button id="btn-parar" type="button" class="btn-perigo" onclick="pararPartida()">Parar e levar <span id="txt-valor-parar">R$ 0,00</span></button>
         </div>
       </div>
 
@@ -81,8 +81,8 @@
         <p id="fim-detalhes" class="fim-detalhes">...</p>
         <p id="fim-status-envio" class="status-envio">Salvando no banco de dados...</p>
         <div class="acoes-fim">
-          <button id="btn-jogar-novamente" type="button" class="btn-principal">Jogar Novamente 🔄</button>
-          <button id="btn-ir-ranking" type="button" class="btn-secundario">Ver no Ranking 🏆</button>
+          <button id="btn-jogar-novamente" type="button" class="btn-principal" onclick="reiniciarJogo()">Jogar Novamente 🔄</button>
+          <button id="btn-ir-ranking" type="button" class="btn-secundario" onclick="alternarAba('ranking')">Ver no Ranking 🏆</button>
         </div>
       </div>
     </section>
@@ -96,8 +96,8 @@
             <p class="sub">Melhor resultado de cada jogador ordenado por maior prêmio e menor tempo.</p>
           </div>
           <div class="controles">
-            <select id="filtro-jogo" aria-label="Selecione o Jogo"></select>
-            <button id="btn-atualizar" type="button" class="btn-atualizar">🔄 Atualizar</button>
+            <select id="filtro-jogo" aria-label="Selecione o Jogo" onchange="carregarRanking()"></select>
+            <button id="btn-atualizar" type="button" class="btn-atualizar" onclick="carregarRanking()">🔄 Atualizar</button>
           </div>
         </div>
 
@@ -128,7 +128,7 @@
     </div>
   </footer>
 
-  <script src="config.js"></script>
-  <script src="script.js"></script>
+  <script src="config.js?v=3.0"></script>
+  <script src="script.js?v=3.0"></script>
 </body>
 </html>

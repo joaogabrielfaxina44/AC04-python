@@ -59,6 +59,20 @@ tem como nós fazermos o jogo ser jogavel pelo site?
 - **Arquivos/funções:** `index.html`, `style.css`, `script.js`.
 - **Teste:** Carregamento de perguntas, sorteio 3-3-3, validação segura com feedback visual e envio para a tabela `partidas`.
 
+## Prompt 5
+- **Data:** 04/11/2026
+- **Integrante:** _[nome]_
+- **Ferramenta/modelo:** Antigravity (Gemini 3.8 Flash)
+- **Objetivo:** Correção de erro na interface web (botões inoperantes e recarregamento da página ao iniciar partida).
+- **Prompt completo:**
+```
+primeiro que nenhum botão esta clicavel, e quando eu clico em iniciar partida oq acontece é que o meu nome some, mais nada, a partida não começa e a tela não funciona.
+Faz uma revisão completa ai 
+```
+- **Como a resposta foi usada:** Diagnóstico via DevTools (`Uncaught TypeError: Cannot set properties of null (setting 'textContent')`) revelando cache do script antigo incompatível com o novo HTML e envio padrão do formulário. Adicionado `preventDefault()`, versionamento de scripts (`?v=3.0`), funções globais de clique e regra `[hidden] { display: none !important; }`.
+- **Arquivos/funções:** `index.html`, `style.css`, `script.js`.
+- **Teste:** Validação de transição de abas, início da partida com apelido, temporizador e botões de resposta no navegador.
+
 ---
 ## Problemas encontrados e correções
 1. **Plano inicial (Prompt 1) conflitava com o enunciado.** Sugeria um jogo no navegador que lia perguntas e gravava partidas pelo site. O enunciado diz que o site é **somente leitura do ranking, sem gabarito**, e que o jogo no navegador é opcional. **Correção:** o site só consulta a view `ranking`; o gabarito ficou protegido no banco (função `verificar_resposta`); o jogo web ficou fora do escopo obrigatório.
@@ -66,3 +80,4 @@ tem como nós fazermos o jogo ser jogavel pelo site?
 3. **Código confuso em `salvar_partida`** (linha com `if False else` deixada na primeira versão). **Correção:** função simplificada, com tratamento do erro 409 para evitar duplicação no reenvio.
 4. **Certificados SSL em rede acadêmica/corporativa.** Na primeira conexão com o Supabase ocorreu erro de `SSLCertVerificationError`. **Correção:** inclusão da biblioteca `truststore` para usar os certificados confiáveis do Windows automaticamente.
 5. **Página inicial abrindo o README no GitHub Pages.** O GitHub Pages estava servindo o Markdown raiz. **Correção:** criação de `index.html`, `style.css` e `script.js` tanto na raiz quanto em `/docs`.
+6. **Incompatibilidade de cache e submissão do formulário web.** O navegador reteve o arquivo `script.js` antigo, causando erro `Cannot set properties of null` e travando a execução do JS. Ao clicar no botão, o formulário executava GET nativo recarregando a página com `?`. **Correção:** inclusão de controle de versão nos scripts (`?v=3.0`), `event.preventDefault()` no formulário e regras CSS explícitas de visibilidade.
