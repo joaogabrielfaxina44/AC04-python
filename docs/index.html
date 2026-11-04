@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ranking - Show do Milhão Python</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>🏆 Ranking - Show do Milhão</h1>
+    <p class="sub">Prêmios fictícios. Top 10 de cada jogo (melhor partida de cada apelido).</p>
+
+    <div class="controles">
+      <label for="filtro-jogo">Jogo:</label>
+      <select id="filtro-jogo"></select>
+      <button id="btn-atualizar" type="button">Atualizar</button>
+    </div>
+
+    <p id="mensagem" role="status"></p>
+
+    <table id="tabela" hidden>
+      <thead>
+        <tr><th>Posição</th><th>Jogo</th><th>Apelido</th><th>Valor ganho</th><th>Tempo</th><th>Data</th></tr>
+      </thead>
+      <tbody id="corpo"></tbody>
+    </table>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
