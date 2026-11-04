@@ -2,30 +2,131 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ranking - Show do Milhão Python</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Show do Milhão - Python & Web</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <h1>🏆 Ranking - Show do Milhão</h1>
-    <p class="sub">Prêmios fictícios. Top 10 de cada jogo (melhor partida de cada apelido).</p>
-
-    <div class="controles">
-      <label for="filtro-jogo">Jogo:</label>
-      <select id="filtro-jogo"></select>
-      <button id="btn-atualizar" type="button">Atualizar</button>
+  <header>
+    <div class="container header-content">
+      <h1>💰 Show do Milhão</h1>
+      <nav class="abas">
+        <button id="aba-jogar-btn" class="aba-btn ativa" type="button">🎮 Jogar no Navegador</button>
+        <button id="aba-ranking-btn" class="aba-btn" type="button">🏆 Ranking Oficial</button>
+      </nav>
     </div>
+  </header>
 
-    <p id="mensagem" role="status"></p>
+  <main class="container">
+    <!-- ==================== SEÇÃO DO JOGO ==================== -->
+    <section id="secao-jogo" class="secao ativa">
+      <!-- Tela Inicial do Jogo -->
+      <div id="tela-inicio" class="card">
+        <h2>Pronto para concorrer a R$ 1.000.000,00?</h2>
+        <p class="instrucoes">
+          Responda até 9 perguntas sem errar: 3 fáceis, 3 médias e 3 difíceis.<br>
+          Os prêmios são fictícios e cada acerto substitui o valor anterior.
+        </p>
+        <form id="form-inicio" class="form-inicio">
+          <label for="input-apelido">Digite seu Apelido (não vazio, até 20 letras):</label>
+          <input type="text" id="input-apelido" maxlength="20" placeholder="Ex: DevPython" required autofocus autocomplete="off">
+          <button type="submit" class="btn-principal">Iniciar Partida 🚀</button>
+        </form>
+      </div>
 
-    <table id="tabela" hidden>
-      <thead>
-        <tr><th>Posição</th><th>Jogo</th><th>Apelido</th><th>Valor ganho</th><th>Tempo</th><th>Data</th></tr>
-      </thead>
-      <tbody id="corpo"></tbody>
-    </table>
+      <!-- Tela da Partida -->
+      <div id="tela-partida" class="card" hidden>
+        <div class="barra-status">
+          <div class="status-item">
+            <span class="status-label">Pergunta:</span>
+            <span id="txt-progresso" class="status-valor">1/9</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Dificuldade:</span>
+            <span id="txt-dificuldade" class="status-valor badge-facil">Fácil</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Tempo:</span>
+            <span id="txt-tempo" class="status-valor">00:00</span>
+          </div>
+          <div class="status-item destaque">
+            <span class="status-label">Valendo:</span>
+            <span id="txt-valor-acertar" class="status-valor valor-ouro">R$ 1.000,00</span>
+          </div>
+        </div>
+
+        <div class="pergunta-box">
+          <h3 id="txt-enunciado">Carregando pergunta...</h3>
+        </div>
+
+        <div id="grid-alternativas" class="grid-alternativas">
+          <button class="btn-alt" data-letra="a"><span class="letra">A</span> <span class="alt-texto">...</span></button>
+          <button class="btn-alt" data-letra="b"><span class="letra">B</span> <span class="alt-texto">...</span></button>
+          <button class="btn-alt" data-letra="c"><span class="letra">C</span> <span class="alt-texto">...</span></button>
+          <button class="btn-alt" data-letra="d"><span class="letra">D</span> <span class="alt-texto">...</span></button>
+        </div>
+
+        <div class="barra-acoes">
+          <button id="btn-parar" type="button" class="btn-perigo">Parar e levar <span id="txt-valor-parar">R$ 0,00</span></button>
+        </div>
+      </div>
+
+      <!-- Tela de Fim de Jogo -->
+      <div id="tela-fim" class="card" hidden>
+        <h2 id="fim-titulo">Fim de Jogo!</h2>
+        <div class="fim-premio">
+          <span>Prêmio Conquistado:</span>
+          <h1 id="fim-valor" class="valor-ouro">R$ 0,00</h1>
+        </div>
+        <p id="fim-detalhes" class="fim-detalhes">...</p>
+        <p id="fim-status-envio" class="status-envio">Salvando no banco de dados...</p>
+        <div class="acoes-fim">
+          <button id="btn-jogar-novamente" type="button" class="btn-principal">Jogar Novamente 🔄</button>
+          <button id="btn-ir-ranking" type="button" class="btn-secundario">Ver no Ranking 🏆</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SEÇÃO DO RANKING ==================== -->
+    <section id="secao-ranking" class="secao" hidden>
+      <div class="card">
+        <div class="ranking-header">
+          <div>
+            <h2>🏆 Ranking Oficial</h2>
+            <p class="sub">Melhor resultado de cada jogador ordenado por maior prêmio e menor tempo.</p>
+          </div>
+          <div class="controles">
+            <select id="filtro-jogo" aria-label="Selecione o Jogo"></select>
+            <button id="btn-atualizar" type="button" class="btn-atualizar">🔄 Atualizar</button>
+          </div>
+        </div>
+
+        <p id="ranking-mensagem" class="ranking-mensagem" role="status">Carregando ranking...</p>
+
+        <div class="tabela-container">
+          <table id="tabela-ranking" hidden>
+            <thead>
+              <tr>
+                <th>Posição</th>
+                <th>Jogador</th>
+                <th>Prêmio</th>
+                <th>Tempo</th>
+                <th>Acertos</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-ranking"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <footer>
+    <div class="container footer-content">
+      <p>Show do Milhão Python • Integrado com Supabase & GitHub Pages</p>
+    </div>
+  </footer>
 
   <script src="config.js"></script>
   <script src="script.js"></script>

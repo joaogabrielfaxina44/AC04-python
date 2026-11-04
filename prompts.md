@@ -46,8 +46,23 @@ já criei a coonta, ela esta na ultima aba da janela aberta no google. PODE COME
 - **Arquivos/funções:** todos do projeto.
 - **Teste:** `python -m unittest -v` (7 testes das regras passaram). Testes com o banco real: ver `TESTES.md`.
 
+## Prompt 4
+- **Data:** 04/11/2026
+- **Integrante:** _[nome]_
+- **Ferramenta/modelo:** Antigravity (Gemini 3.8 Flash)
+- **Objetivo:** Adicionar jogo interativo jogável no navegador e integrar com o ranking online no GitHub Pages.
+- **Prompt completo:**
+```
+tem como nós fazermos o jogo ser jogavel pelo site?
+```
+- **Como a resposta foi usada:** Criação da interface web interativa do Show do Milhão com abas (🎮 Jogar no Navegador / 🏆 Ranking Oficial), utilizando a função RPC do Supabase para manter o gabarito protegido.
+- **Arquivos/funções:** `index.html`, `style.css`, `script.js`.
+- **Teste:** Carregamento de perguntas, sorteio 3-3-3, validação segura com feedback visual e envio para a tabela `partidas`.
+
 ---
 ## Problemas encontrados e correções
 1. **Plano inicial (Prompt 1) conflitava com o enunciado.** Sugeria um jogo no navegador que lia perguntas e gravava partidas pelo site. O enunciado diz que o site é **somente leitura do ranking, sem gabarito**, e que o jogo no navegador é opcional. **Correção:** o site só consulta a view `ranking`; o gabarito ficou protegido no banco (função `verificar_resposta`); o jogo web ficou fora do escopo obrigatório.
 2. **Erro numa pergunta gerada pela IA.** A pergunta 12 dizia `a, b = [1, 2, 3], a`, código que gera `NameError`. **Correção:** reescrita para `a = [1, 2, 3]`, `b = a`, `b.append(4)` (`banco/02_perguntas.sql`).
 3. **Código confuso em `salvar_partida`** (linha com `if False else` deixada na primeira versão). **Correção:** função simplificada, com tratamento do erro 409 para evitar duplicação no reenvio.
+4. **Certificados SSL em rede acadêmica/corporativa.** Na primeira conexão com o Supabase ocorreu erro de `SSLCertVerificationError`. **Correção:** inclusão da biblioteca `truststore` para usar os certificados confiáveis do Windows automaticamente.
+5. **Página inicial abrindo o README no GitHub Pages.** O GitHub Pages estava servindo o Markdown raiz. **Correção:** criação de `index.html`, `style.css` e `script.js` tanto na raiz quanto em `/docs`.
