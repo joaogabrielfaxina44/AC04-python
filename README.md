@@ -2,7 +2,7 @@
 
 Jogo de perguntas no terminal (Python) integrado ao Supabase, com ranking web no GitHub Pages.
 
-- **Integrantes:** João Gabriel Faxina e _[Nome do 2º integrante]_
+- **Integrantes:** João Gabriel Faxina, Caroline Kaori e Arthur Tuccio
 - **Turma:** _[Turma]_
 - **Repositório GitHub:** https://github.com/joaogabrielfaxina44/AC04-python
 - **Site (GitHub Pages):** https://joaogabrielfaxina44.github.io/AC04-python/
