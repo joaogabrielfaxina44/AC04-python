@@ -1,4 +1,4 @@
-// Carrega credenciais públicas do config.js
+﻿// Carrega credenciais públicas do config.js
 const { SUPABASE_URL, SUPABASE_ANON_KEY } = window.CONFIG || {};
 
 // Regras e Prêmios
@@ -116,7 +116,14 @@ window.iniciarPartida = async function() {
       throw new Error("Nenhuma pergunta encontrada no banco de dados.");
     }
 
-    const embaralhar = (lista) => lista.sort(() => Math.random() - 0.5);
+        const embaralhar = (lista) => {
+      const copia = [...lista];
+      for (let i = copia.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copia[i], copia[j]] = [copia[j], copia[i]];
+      }
+      return copia;
+    };
     const faceis = embaralhar(todas.filter(p => p.dificuldade === "facil")).slice(0, 3);
     const medias = embaralhar(todas.filter(p => p.dificuldade === "media")).slice(0, 3);
     const dificeis = embaralhar(todas.filter(p => p.dificuldade === "dificil")).slice(0, 3);
@@ -341,7 +348,10 @@ window.carregarRanking = async function() {
       const tdData = document.createElement("td");
       tdData.textContent = formatarData(l.data_hora);
 
-      tr.append(tdPos, tdNome, tdValor, tdTempo, tdAcertos, tdData);
+            const tdJogo = document.createElement("td");
+      tdJogo.textContent = l.jogo_nome || NOME_JOGO;
+
+      tr.append(tdPos, tdJogo, tdNome, tdValor, tdTempo, tdAcertos, tdData);
       corpoRanking.appendChild(tr);
     }
 

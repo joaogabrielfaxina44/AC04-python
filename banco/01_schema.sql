@@ -58,7 +58,7 @@ create index partidas_jogo_idx on public.partidas (jogo_id, apelido);
 -- RANKING: melhor partida de cada apelido, por jogo.
 -- Ordem: maior valor_ganho > menor tempo > data mais antiga > menor id.
 -- ---------------------------------------------------------------------
-create view public.ranking as
+create view public.ranking with (security_invoker = false) as
 with melhores as (
     select distinct on (p.jogo_id, lower(p.apelido)) p.*
     from public.partidas p
@@ -119,11 +119,12 @@ grant select (id, enunciado, alternativa_a, alternativa_b, alternativa_c, altern
     on public.perguntas to anon;
 create policy "perguntas_leitura" on public.perguntas for select to anon using (true);
 
--- partidas: só inserir (nada de ler, alterar ou apagar)
-grant insert on public.partidas to anon;
+-- partidas: inserir resultados e leitura pública para montagem do ranking (sem permissão de alterar ou apagar)
+grant insert, select on public.partidas to anon;
 create policy "partidas_insercao" on public.partidas for insert to anon with check (true);
+create policy "partidas_leitura" on public.partidas for select to anon using (true);
 
--- ranking: só leitura (a view acessa "partidas" com os direitos do dono)
+-- ranking: só leitura
 grant select on public.ranking to anon;
 
 -- função de conferir resposta
