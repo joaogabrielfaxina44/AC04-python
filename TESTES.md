@@ -26,3 +26,10 @@ Para executar a bateria de testes unitários locais (não dependem de internet):
 python -m unittest python/test_regras.py -v
 ```
 Todos os 7 testes de regras (prêmios sem soma, limite de valores, ordem de dificuldade, ausência de repetição e formatações) foram aprovados com sucesso.
+
+
+## Evidências Visuais das Partidas e Integração
+
+As capturas de tela das execuções estão organizadas na pasta `evidencias/`:
+1. `evidencias/01_supabase_sql.jpg`: Execução da liberação de RLS no SQL Editor do Supabase.
+2. `evidencias/02_ranking_site.jpg`: Ranking oficial no GitHub Pages consultando os dados online com partidas registradas (identificando apelido `jg4`, prêmio `R$ 500.000,00`, acertos `8/9`, tempo `1 min 33 s` e data).
