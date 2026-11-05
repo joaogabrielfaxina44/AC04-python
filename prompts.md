@@ -111,6 +111,21 @@ faz tudo que vc pode fazer e dpois nós resolvemos oq eu preciso fazer
 - **Teste:** Validação de integridade dos arquivos e verificação dos campos de saída do ranking.
 
 ---
+## Prompt 8
+- **Data:** 04/11/2026
+- **Integrante:** João Gabriel
+- **Ferramenta/modelo:** Antigravity (Gemini 3.8 Flash)
+- **Objetivo:** Inclusão dos dados da equipe (trio) e definição do identificador da turma no projeto.
+- **Prompt completo:**
+```
+Meus colegas são a Caroline Kaori e o Arthur tuccio
+a turma é 1-IA-A
+```
+- **Como a resposta foi usada:** Atualização do cabeçalho do `README.md` com os integrantes completos e turma `1-IA-A`, e geração do arquivo compactado final de entrega `1-IA-A_Joao_Caroline_Arthur.zip`.
+- **Arquivos/funções:** `README.md`, `1-IA-A_Joao_Caroline_Arthur.zip`.
+- **Teste:** Verificação da integridade do arquivo ZIP e conferência dos arquivos obrigatórios.
+
+---
 ## Problemas encontrados e correções
 1. **Plano inicial (Prompt 1) conflitava com o enunciado.** Sugeria um jogo no navegador que lia perguntas e gravava partidas pelo site. O enunciado diz que o site é **somente leitura do ranking, sem gabarito**, e que o jogo no navegador é opcional. **Correção:** O site só consulta a view `ranking`; o gabarito ficou protegido no servidor Supabase (função RPC `verificar_resposta`).
 2. **Erro numa pergunta gerada pela IA.** A pergunta 12 dizia `a, b = [1, 2, 3], a`, código que gera `NameError`. **Correção:** Reescrita para `a = [1, 2, 3]`, `b = a`, `b.append(4)` (`banco/02_perguntas.sql`).
